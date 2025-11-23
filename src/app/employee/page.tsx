@@ -2,6 +2,11 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import ClockIn from '@/components/ClockIn'
 import { logout } from '../auth/actions'
+import Link from 'next/link'
+import { MessageSquare } from 'lucide-react'
+// ... (imports)
+
+// ... inside component return
 
 export default async function EmployeePage() {
   const supabase = await createClient()
@@ -25,7 +30,11 @@ export default async function EmployeePage() {
       <header className="bg-white shadow">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-xl font-bold tracking-tight text-gray-900">Employee Portal</h1>
+
           <div className="flex items-center gap-4">
+            <Link href="/employee/messages" className="text-gray-500 hover:text-indigo-600" title="Messages">
+              <MessageSquare className="h-6 w-6" />
+            </Link>
             <span className="text-sm text-gray-500">{profile.full_name}</span>
             <form action={logout}>
               <button className="text-sm text-red-600 hover:text-red-500">Sign out</button>
