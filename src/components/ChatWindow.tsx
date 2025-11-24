@@ -3,25 +3,27 @@
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import ReactMarkdown from 'react-markdown'
-import { Camera, Send, Image as ImageIcon, X } from 'lucide-react'
-// Camera functionality will use native file input with capture attribute
+import { Camera, Send, Image as ImageIcon } from 'lucide-react'
 
-interface Message {
+
+type Message = {
   id: string
   sender_id: string
   receiver_id: string
   content: string
   image_url?: string
+  read?: boolean
   created_at: string
 }
 
-interface ChatWindowProps {
+type ChatWindowProps = {
   currentUserId: string
   otherUserId: string
   otherUserName: string
+  roomId: string
 }
 
-export default function ChatWindow({ currentUserId, otherUserId, otherUserName }: ChatWindowProps) {
+export default function ChatWindow({ currentUserId, otherUserId, roomId, otherUserName }: ChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -32,7 +34,7 @@ export default function ChatWindow({ currentUserId, otherUserId, otherUserName }
 
   useEffect(() => {
     // Fetch initial messages
-    const fetchMessages = async () => {
+    (async () => {
       const { data } = await supabase
         .from('messages')
         .select('*')
@@ -40,13 +42,13 @@ export default function ChatWindow({ currentUserId, otherUserId, otherUserName }
         .order('created_at', { ascending: true })
       
       if (data) setMessages(data)
-    }
+    })()
 
-    fetchMessages()
+
 
     // Subscribe to new messages - listen for all messages in this conversation
     const channel = supabase
-      .channel(`chat:${currentUserId}:${otherUserId}`)
+      .channel(`chat:${roomId}`)
       .on(
         'postgres_changes',
         {
@@ -87,7 +89,22 @@ export default function ChatWindow({ currentUserId, otherUserId, otherUserName }
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    
+    // Mark unread messages as read
+    const unreadMessageIds = messages
+      .filter(m => m.receiver_id === currentUserId && !m.read)
+      .map(m => m.id)
+    
+    if (unreadMessageIds.length > 0) {
+      supabase
+        .from('messages')
+        .update({ read: true })
+        .in('id', unreadMessageIds)
+        .then(() => {
+          console.log('✅ Marked messages as read:', unreadMessageIds)
+        })
+    }
+  }, [messages, currentUserId, supabase])
 
   const sendMessage = async (content: string, imageUrl?: string) => {
     if (!content.trim() && !imageUrl) return

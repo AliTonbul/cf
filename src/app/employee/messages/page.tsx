@@ -42,6 +42,7 @@ export default async function EmployeeMessagesPage() {
         <div className="bg-white shadow rounded-lg overflow-hidden h-[600px]">
           <ChatWindow 
             currentUserId={user.id} 
+            roomId={user.id}
             otherUserId={business.owner_id} 
             otherUserName={`${business.name} (${ownerName})`} 
           />

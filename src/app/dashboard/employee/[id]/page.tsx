@@ -2,7 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Clock, MapPin } from 'lucide-react'
-import ChatWindowWrapper from '@/components/ChatWindowWrapper'
+import ChatWindow from '@/components/ChatWindow'
 
 export default async function EmployeeDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -86,8 +86,9 @@ export default async function EmployeeDetailsPage({ params }: { params: Promise<
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Chat Window */}
           <section className="bg-white shadow rounded-lg overflow-hidden lg:col-span-2">
-             <ChatWindowWrapper 
+             <ChatWindow 
                 currentUserId={user.id} 
+                roomId={employee.id}
                 otherUserId={employee.id} 
                 otherUserName={employee.full_name} 
              />

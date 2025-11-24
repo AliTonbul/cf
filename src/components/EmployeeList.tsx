@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
-import { User, Clock, Plus, X, KeyRound } from 'lucide-react'
+import { User,  Plus, X, KeyRound } from 'lucide-react'
 import { inviteEmployee, resetEmployeePassword } from '@/app/dashboard/actions'
 
 interface Employee {
