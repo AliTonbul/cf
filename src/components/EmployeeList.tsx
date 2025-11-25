@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
 import { User,  Plus, X, KeyRound } from 'lucide-react'
-import { inviteEmployee, resetEmployeePassword } from '@/app/dashboard/actions'
+import { inviteEmployee, resetEmployeePassword, deleteEmployee } from '@/app/dashboard/actions'
+import { Trash2 } from 'lucide-react'
 
 interface Employee {
   id: string
@@ -32,6 +33,12 @@ export default function EmployeeList({ initialEmployees, businessId }: EmployeeL
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
   const [resetError, setResetError] = useState<string | null>(null)
   const [resetSuccess, setResetSuccess] = useState(false)
+
+  // Delete State
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deleteSuccess, setDeleteSuccess] = useState(false)
 
   const supabase = createClient()
 
@@ -104,6 +111,35 @@ export default function EmployeeList({ initialEmployees, businessId }: EmployeeL
         setSelectedEmployee(null)
       }, 2000)
     }
+  }
+
+  async function handleDelete(formData: FormData) {
+    setDeleteError(null)
+    setDeleteSuccess(false)
+    
+    const res = await deleteEmployee(formData)
+    
+    if (res?.error) {
+      setDeleteError(res.error)
+    } else {
+      setDeleteSuccess(true)
+      // Optimistically remove from list or wait for revalidate
+      if (employeeToDelete) {
+        setEmployees(prev => prev.filter(e => e.id !== employeeToDelete.id))
+      }
+      setTimeout(() => {
+        setIsDeleteOpen(false)
+        setDeleteSuccess(false)
+        setEmployeeToDelete(null)
+      }, 2000)
+    }
+  }
+
+  const openDeleteModal = (employee: Employee) => {
+    setEmployeeToDelete(employee)
+    setIsDeleteOpen(true)
+    setDeleteError(null)
+    setDeleteSuccess(false)
   }
 
   const openResetModal = (employee: Employee) => {
@@ -248,6 +284,62 @@ export default function EmployeeList({ initialEmployees, businessId }: EmployeeL
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
+      {isDeleteOpen && employeeToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md relative">
+            <button 
+              onClick={() => setIsDeleteOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-500"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            
+            <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Delete Employee</h3>
+            
+            {deleteSuccess ? (
+              <div className="rounded-md bg-green-50 p-4 mb-4">
+                <div className="flex">
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-green-800">Employee Deleted</h3>
+                    <div className="mt-2 text-sm text-green-700">
+                      <p>{employeeToDelete.full_name} has been removed from your business.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-500">
+                  Are you sure you want to delete <span className="font-medium text-gray-900">{employeeToDelete.full_name}</span>? This action cannot be undone.
+                </p>
+                
+                {deleteError && (
+                  <div className="text-red-600 text-sm">{deleteError}</div>
+                )}
+                
+                <form action={handleDelete} className="mt-5 sm:mt-6 flex gap-3">
+                  <input type="hidden" name="userId" value={employeeToDelete.id} />
+                  <button
+                    type="button"
+                    onClick={() => setIsDeleteOpen(false)}
+                    className="inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
+                  >
+                    Delete
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <ul role="list" className="divide-y divide-gray-200">
         {employees.map((employee) => (
           <li key={employee.id} className="flex items-center justify-between px-4 py-4 sm:px-6">
@@ -278,6 +370,14 @@ export default function EmployeeList({ initialEmployees, businessId }: EmployeeL
                 title="Reset Password"
               >
                 <KeyRound className="h-5 w-5" />
+              </button>
+              
+              <button
+                onClick={() => openDeleteModal(employee)}
+                className="text-gray-400 hover:text-red-600"
+                title="Delete Employee"
+              >
+                <Trash2 className="h-5 w-5" />
               </button>
             </div>
           </li>

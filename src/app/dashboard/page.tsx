@@ -80,16 +80,15 @@ export default async function DashboardPage() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
-         <section style={{ zIndex: 2 }}>
+         <section>
           <EmployeeList initialEmployees={employees as any} businessId={business.id} />
         </section>
 
-        <section style={{ zIndex: 1 }}>
+        <section>
           <h2 className="text-lg font-medium text-gray-900 mb-4">Live Map</h2>
-          <DashboardMap locations={latestLocations as any} />
+          {/* <DashboardMap locations={latestLocations as any} /> */}
         </section>
 
-       
       </main>
     </div>
   )

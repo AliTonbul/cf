@@ -107,3 +107,49 @@ export async function resetEmployeePassword(formData: FormData) {
 
   return { success: true }
 }
+
+export async function deleteEmployee(formData: FormData) {
+  const supabase = await createClient()
+  const adminSupabase = createAdminClient()
+
+  // 1. Verify current user is owner
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, business_id')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role !== 'owner' || !profile.business_id) {
+    return { error: 'Unauthorized' }
+  }
+
+  const userId = formData.get('userId') as string
+
+  if (!userId) {
+    return { error: 'User ID is required' }
+  }
+
+  // 2. Verify target user belongs to the same business
+  const { data: targetProfile } = await supabase
+    .from('profiles')
+    .select('business_id')
+    .eq('id', userId)
+    .single()
+
+  if (targetProfile?.business_id !== profile.business_id) {
+    return { error: 'Unauthorized: Employee not found in your business' }
+  }
+
+  // 3. Delete User via Admin API
+  const { error } = await adminSupabase.auth.admin.deleteUser(userId)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath('/dashboard')
+  return { success: true }
+}

@@ -35,7 +35,7 @@ export default function DashboardMap({ locations }: DashboardMapProps) {
     : [51.505, -0.09]
 
   return (
-    <div className="h-[400px] w-full rounded-lg overflow-hidden shadow-lg z-0">
+    <div className="h-[400px] w-full rounded-lg overflow-hidden shadow-lg">
       <MapContainer center={center} zoom={13} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
