@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
 import { User,  Plus, X, KeyRound } from 'lucide-react'
-import { inviteEmployee, resetEmployeePassword, deleteEmployee } from '@/app/dashboard/actions'
+import { inviteEmployee, resetUserPassword, deleteUser } from '@/app/dashboard/actions'
 import { Trash2 } from 'lucide-react'
 
 interface Employee {
@@ -99,7 +99,7 @@ export default function EmployeeList({ initialEmployees, businessId }: EmployeeL
     setResetError(null)
     setResetSuccess(false)
     
-    const res = await resetEmployeePassword(formData)
+    const res = await resetUserPassword(formData)
     
     if (res?.error) {
       setResetError(res.error)
@@ -117,7 +117,7 @@ export default function EmployeeList({ initialEmployees, businessId }: EmployeeL
     setDeleteError(null)
     setDeleteSuccess(false)
     
-    const res = await deleteEmployee(formData)
+    const res = await deleteUser(formData)
     
     if (res?.error) {
       setDeleteError(res.error)

@@ -73,16 +73,16 @@ const HamburgerIcon = ({ className, ...props }: React.SVGAttributes<SVGElement>)
 );
 
 // Types
-export interface Navbar01NavLink {
+export interface NavbarNavLink {
   href: string;
   label: string;
   active?: boolean;
 }
 
-export interface Navbar01Props extends React.HTMLAttributes<HTMLElement> {
+export interface NavbarProps extends React.HTMLAttributes<HTMLElement> {
   logo?: React.ReactNode;
   logoHref?: string;
-  navigationLinks?: Navbar01NavLink[];
+  navigationLinks?: NavbarNavLink[];
   signInText?: string;
   signInHref?: string;
   ctaText?: string;
@@ -92,14 +92,14 @@ export interface Navbar01Props extends React.HTMLAttributes<HTMLElement> {
 }
 
 // Default navigation links
-const defaultNavigationLinks: Navbar01NavLink[] = [
+const defaultNavigationLinks: NavbarNavLink[] = [
   { href: '#', label: 'Home', active: true },
   { href: '#features', label: 'Features' },
   { href: '#pricing', label: 'Pricing' },
   { href: '#about', label: 'About' },
 ];
 
-export const Navbar = React.forwardRef<HTMLElement, Navbar01Props>(
+export const Navbar = React.forwardRef<HTMLElement, NavbarProps>(
   (
     {
       className,
@@ -201,7 +201,7 @@ export const Navbar = React.forwardRef<HTMLElement, Navbar01Props>(
                 <div className="text-2xl">
                   {logo}
                 </div>
-                <span className="hidden font-bold text-xl sm:inline-block">shadcn.io</span>
+                <span className="hidden font-bold text-xl sm:inline-block">CF</span>
               </button>
               {/* Navigation menu */}
               {!isMobile && (

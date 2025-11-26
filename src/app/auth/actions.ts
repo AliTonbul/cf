@@ -28,7 +28,7 @@ export async function login(prevState: any, formData: FormData) {
       .eq('id', user.id)
       .single()
     
-    if (profile?.role === 'owner') {
+    if (profile?.role === 'owner' || profile?.role === 'admin') {
       redirect('/dashboard')
     } else if (profile?.role === 'employee') {
       redirect('/employee')
