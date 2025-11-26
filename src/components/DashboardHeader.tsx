@@ -1,8 +1,6 @@
 'use client'
 
-import { useState } from 'react'
 import { logout } from '@/app/auth/actions'
-import ChangePasswordModal from './ChangePasswordModal'
 
 interface DashboardHeaderProps {
   businessName: string
@@ -12,8 +10,6 @@ interface DashboardHeaderProps {
 }
 
 export default function DashboardHeader({ businessName, inviteCode, userFullName, userRole }: DashboardHeaderProps) {
-  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
-
   return (
     <header className="bg-white shadow">
       <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
@@ -27,23 +23,11 @@ export default function DashboardHeader({ businessName, inviteCode, userFullName
             <p className="text-xs text-gray-500 capitalize">{userRole}</p>
           </div>
           
-          <button 
-            onClick={() => setIsChangePasswordOpen(true)}
-            className="text-sm text-indigo-600 hover:text-indigo-500"
-          >
-            Change Password
-          </button>
-          
           <form action={logout}>
             <button className="text-sm text-red-600 hover:text-red-500">Sign out</button>
           </form>
         </div>
       </div>
-
-      <ChangePasswordModal 
-        isOpen={isChangePasswordOpen} 
-        onClose={() => setIsChangePasswordOpen(false)} 
-      />
     </header>
   )
 }
