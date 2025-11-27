@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import ClockIn from '@/components/ClockIn'
 import { logout } from '../auth/actions'
 import MessageNotificationClient from '@/components/MessageNotificationClient'
+import Docker from '@/components/Dock'
 
 export default async function EmployeePage() {
   const supabase = await createClient()
@@ -39,6 +40,7 @@ export default async function EmployeePage() {
       <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <ClockIn initialTimesheet={activeTimesheet} />
       </main>
+      <Docker />
     </div>
   )
 }
