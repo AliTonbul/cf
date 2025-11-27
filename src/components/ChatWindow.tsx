@@ -3,8 +3,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import ReactMarkdown from 'react-markdown'
-import { Camera, Send, Image as ImageIcon } from 'lucide-react'
-
+import { Camera, Send, Image as ImageIcon, Paperclip } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Card } from '@/components/ui/card'
 
 type Message = {
   id: string
@@ -44,9 +48,7 @@ export default function ChatWindow({ currentUserId, otherUserId, roomId, otherUs
       if (data) setMessages(data)
     })()
 
-
-
-    // Subscribe to new messages - listen for all messages in this conversation
+    // Subscribe to new messages
     const channel = supabase
       .channel(`chat:${roomId}`)
       .on(
@@ -57,35 +59,24 @@ export default function ChatWindow({ currentUserId, otherUserId, roomId, otherUs
           table: 'messages',
         },
         (payload) => {
-          console.log('📨 Received real-time message:', payload)
           const newMessage = payload.new as Message
-          // Only add if it's part of this conversation
           if (
             (newMessage.sender_id === currentUserId && newMessage.receiver_id === otherUserId) ||
             (newMessage.sender_id === otherUserId && newMessage.receiver_id === currentUserId)
           ) {
-            console.log('✅ Message is for this conversation, adding to state')
             setMessages((prev) => {
-              // Avoid duplicates
-              if (prev.some(m => m.id === newMessage.id)) {
-                console.log('⚠️ Duplicate message, skipping')
-                return prev
-              }
+              if (prev.some(m => m.id === newMessage.id)) return prev
               return [...prev, newMessage]
             })
-          } else {
-            console.log('❌ Message not for this conversation')
           }
         }
       )
-      .subscribe((status) => {
-        console.log('🔌 Subscription status:', status)
-      })
+      .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [currentUserId, otherUserId, supabase])
+  }, [currentUserId, otherUserId, supabase, roomId])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -100,9 +91,7 @@ export default function ChatWindow({ currentUserId, otherUserId, roomId, otherUs
         .from('messages')
         .update({ read: true })
         .in('id', unreadMessageIds)
-        .then(() => {
-          console.log('✅ Marked messages as read:', unreadMessageIds)
-        })
+        .then()
     }
   }, [messages, currentUserId, supabase])
 
@@ -131,7 +120,6 @@ export default function ChatWindow({ currentUserId, otherUserId, roomId, otherUs
 
     if (error) {
       console.error('Error sending message:', error)
-      // Remove optimistic message on error (simplified)
       setMessages((prev) => prev.filter(m => m.id !== tempId))
     }
   }
@@ -161,103 +149,106 @@ export default function ChatWindow({ currentUserId, otherUserId, roomId, otherUs
   }
 
   return (
-    <div className="flex flex-col h-[600px] bg-white rounded-lg shadow border border-gray-200">
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-        <h3 className="text-sm font-medium text-gray-900">Chat with {otherUserName}</h3>
-      </div>
-
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg) => {
-          const isMe = msg.sender_id === currentUserId
-          return (
-            <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                isMe ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-900'
-              }`}>
-                {msg.image_url && (
-                  <img src={msg.image_url} alt="Shared" className="rounded-md mb-2 max-h-48 object-cover" />
-                )}
-                {msg.content && (
-                  <div className={`prose prose-sm max-w-none ${isMe ? 'prose-invert' : ''}`}>
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+    <Card className="flex flex-col h-full border-0 shadow-none rounded-none">
+      <ScrollArea className="flex-1 p-4" style={{ overflowY: 'scroll' }}>
+        <div className="space-y-4">
+          {messages.map((msg) => {
+            const isMe = msg.sender_id === currentUserId
+            return (
+              <div key={msg.id} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback>{isMe ? 'ME' : otherUserName.substring(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className={`flex flex-col max-w-[70%] ${isMe ? 'items-end' : 'items-start'}`}>
+                  <div className={`rounded-lg px-4 py-2 ${
+                    isMe ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                  }`}>
+                    {msg.image_url && (
+                      <img src={msg.image_url} alt="Shared" className="rounded-md mb-2 max-h-48 object-cover" />
+                    )}
+                    {msg.content && (
+                      <div className={`prose prose-sm max-w-none ${isMe ? 'prose-invert' : ''}`}>
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      </div>
+                    )}
                   </div>
-                )}
-                <p className={`text-xs mt-1 ${isMe ? 'text-indigo-200' : 'text-gray-500'}`}>
-                  {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </p>
+                  <span className="text-xs text-muted-foreground mt-1">
+                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
               </div>
-            </div>
-          )
-        })}
-        <div ref={messagesEndRef} />
-      </div>
+            )
+          })}
+          <div ref={messagesEndRef} />
+        </div>
+      </ScrollArea>
 
-       {/* Camera Capture using file input */}
-       <input
-         type="file"
-         accept="image/*"
-         capture="environment"
-         ref={cameraInputRef}
-         className="hidden"
-         onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
-       />
-
-      {/* Input Area */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
-        <div className="flex items-end gap-2">
-          <div className="flex gap-2 pb-2">
-             <button
-               onClick={() => cameraInputRef.current?.click()}
-               className="text-gray-500 hover:text-indigo-600 p-1"
-               title="Take Photo"
-             >
-               <Camera className="h-5 w-5" />
-             </button>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="text-gray-500 hover:text-indigo-600 p-1"
-              title="Upload Image"
-            >
-              <ImageIcon className="h-5 w-5" />
-            </button>
-            <input
+      <div className="p-4 border-t bg-background">
+        <div className="flex items-center gap-2">
+           <input
+             type="file"
+             accept="image/*"
+             capture="environment"
+             ref={cameraInputRef}
+             className="hidden"
+             onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+           />
+           <input
               type="file"
               ref={fileInputRef}
               className="hidden"
               accept="image/*"
               onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
             />
-          </div>
+            
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => cameraInputRef.current?.click()}
+            disabled={uploading}
+            className="shrink-0"
+          >
+            <Camera className="h-5 w-5" />
+            <span className="sr-only">Take Photo</span>
+          </Button>
           
-          <div className="flex-1">
-            <textarea
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  sendMessage(newMessage)
-                }
-              }}
-              placeholder="Type a message... (Markdown supported)"
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm resize-none"
-              rows={1}
-              style={{ minHeight: '38px', maxHeight: '120px' }}
-            />
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="shrink-0"
+          >
+            <Paperclip className="h-5 w-5" />
+            <span className="sr-only">Attach File</span>
+          </Button>
+
+          <Input
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                sendMessage(newMessage)
+              }
+            }}
+            placeholder="Type your message..."
+            className="flex-1"
+            autoComplete="off"
+          />
           
-          <button
+          <Button 
             onClick={() => sendMessage(newMessage)}
             disabled={(!newMessage.trim() && !uploading) || uploading}
-            className="bg-indigo-600 text-white p-2 rounded-full hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed mb-0.5"
+            size="icon"
+            className="shrink-0"
           >
             <Send className="h-5 w-5" />
-          </button>
+            <span className="sr-only">Send</span>
+          </Button>
         </div>
-        {uploading && <p className="text-xs text-gray-500 mt-1">Uploading image...</p>}
+        {uploading && <p className="text-xs text-muted-foreground mt-2">Uploading image...</p>}
       </div>
-    </div>
+    </Card>
   )
 }
