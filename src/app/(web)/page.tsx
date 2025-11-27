@@ -2,8 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Navbar } from '@/components/Navbar';
-import Footer from '@/components/Footer';
+
 export default async function Home() {
   //const supabase = await createClient()
 
@@ -16,15 +15,8 @@ export default async function Home() {
   // }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
-      
-      <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gray-50">
-
-        </section>
-      </main>
-      <Footer />
-    </div>
+    <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gray-50">
+hello
+    </section>
   )
 }
