@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
-import { User,  Plus, X, KeyRound } from 'lucide-react'
-import { inviteEmployee, resetUserPassword, deleteUser } from '@/app/dashboard/actions'
+import { User, Plus, X, KeyRound } from 'lucide-react'
+import { resetUserPassword, deleteUser } from '@/app/dashboard/actions'
 import { Trash2 } from 'lucide-react'
+import CreateEmployeeModal from './CreateEmployeeModal'
 
 interface Employee {
   id: string
@@ -23,10 +24,8 @@ interface EmployeeListProps {
 export default function EmployeeList({ initialEmployees, businessId }: EmployeeListProps) {
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees)
   
-  // Invite State
-  const [isInviteOpen, setIsInviteOpen] = useState(false)
-  const [inviteError, setInviteError] = useState<string | null>(null)
-  const [inviteSuccess, setInviteSuccess] = useState(false)
+  // Create State
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
 
   // Reset Password State
   const [isResetOpen, setIsResetOpen] = useState(false)
@@ -78,22 +77,6 @@ export default function EmployeeList({ initialEmployees, businessId }: EmployeeL
     }
   }, [businessId, supabase])
 
-  async function handleInvite(formData: FormData) {
-    setInviteError(null)
-    setInviteSuccess(false)
-    
-    const res = await inviteEmployee(formData)
-    
-    if (res?.error) {
-      setInviteError(res.error)
-    } else {
-      setInviteSuccess(true)
-      setTimeout(() => {
-        setIsInviteOpen(false)
-        setInviteSuccess(false)
-      }, 2000)
-    }
-  }
 
   async function handleResetPassword(formData: FormData) {
     setResetError(null)
@@ -154,78 +137,21 @@ export default function EmployeeList({ initialEmployees, businessId }: EmployeeL
       <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
         <h3 className="text-base font-semibold leading-6 text-gray-900">Team Members</h3>
         <button
-          onClick={() => setIsInviteOpen(true)}
+          onClick={() => setIsCreateOpen(true)}
           className="inline-flex items-center gap-x-1.5 rounded-md bg-indigo-600 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
         >
           <Plus className="-ml-0.5 h-5 w-5" aria-hidden="true" />
-          Invite Employee
+          Create Employee
         </button>
       </div>
       
-      {/* Invite Modal */}
-      {isInviteOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md relative">
-            <button 
-              onClick={() => setIsInviteOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-500"
-            >
-              <X className="h-6 w-6" />
-            </button>
-            
-            <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Invite New Employee</h3>
-            
-            {inviteSuccess ? (
-              <div className="rounded-md bg-green-50 p-4 mb-4">
-                <div className="flex">
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-green-800">Invitation sent!</h3>
-                    <div className="mt-2 text-sm text-green-700">
-                      <p>The employee will receive an email to complete their setup.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <form action={handleInvite} className="space-y-4">
-                <div>
-                  <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">Full Name</label>
-                  <input
-                    type="text"
-                    name="fullName"
-                    id="fullName"
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
-                  <input
-                    type="email"
-                    name="email"
-                    id="email"
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
-                  />
-                </div>
-                
-                {inviteError && (
-                  <div className="text-red-600 text-sm">{inviteError}</div>
-                )}
-                
-                <div className="mt-5 sm:mt-6">
-                  <button
-                    type="submit"
-                    className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                  >
-                    Send Invitation
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
+      <CreateEmployeeModal 
+        isOpen={isCreateOpen} 
+        onClose={() => setIsCreateOpen(false)}
+        onSuccess={() => {
+          window.location.reload()
+        }}
+      />
 
       {/* Reset Password Modal */}
       {isResetOpen && selectedEmployee && (

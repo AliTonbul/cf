@@ -9,6 +9,7 @@ interface Admin {
   id: string
   full_name: string
   email?: string
+  role?: string
 }
 
 interface AdminListProps {
@@ -230,7 +231,7 @@ export default function AdminList({ initialAdmins, businessId }: AdminListProps)
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900">
-                  {admin.full_name}
+                  {admin.full_name} {admin.role === 'owner' && <span className="ml-2 inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">Owner</span>}
                 </p>
                 <p className="text-xs text-gray-500">{admin.email}</p>
               </div>
@@ -244,13 +245,15 @@ export default function AdminList({ initialAdmins, businessId }: AdminListProps)
                 <KeyRound className="h-5 w-5" />
               </button>
               
-              <button
-                onClick={() => openDeleteModal(admin)}
-                className="text-gray-400 hover:text-red-600"
-                title="Delete Admin"
-              >
-                <Trash2 className="h-5 w-5" />
-              </button>
+              {admin.role !== 'owner' && (
+                <button
+                  onClick={() => openDeleteModal(admin)}
+                  className="text-gray-400 hover:text-red-600"
+                  title="Delete Admin"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
+              )}
             </div>
           </li>
         ))}

@@ -136,6 +136,68 @@ export async function createAdmin(formData: FormData) {
   return { success: true }
 }
 
+export async function createEmployee(formData: FormData) {
+  const supabase = await createClient()
+  const adminSupabase = createAdminClient()
+
+  // 1. Verify current user is owner
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, business_id')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role !== 'owner' || !profile.business_id) {
+    return { error: 'Unauthorized' }
+  }
+
+  const email = formData.get('email') as string
+  const fullName = formData.get('fullName') as string
+  const password = formData.get('password') as string
+
+  if (!email || !fullName || !password) {
+    return { error: 'Email, Name, and Password are required' }
+  }
+
+  if (password.length < 6) {
+    return { error: 'Password must be at least 6 characters' }
+  }
+
+  // 2. Get Business Info for Invite Code
+  const { data: business } = await supabase
+    .from('businesses')
+    .select('invite_code')
+    .eq('id', profile.business_id)
+    .single()
+
+  if (!business) return { error: 'Business not found' }
+
+  // 3. Create User via Admin API
+  const { data: newUser, error } = await adminSupabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: {
+      full_name: fullName,
+      role: 'employee',
+      business_id: profile.business_id,
+      invite_code: business.invite_code
+    }
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath('/dashboard/users')
+  return { success: true }
+}
+
+
+
 export async function resetUserPassword(formData: FormData) {
   const supabase = await createClient()
   const adminSupabase = createAdminClient()
