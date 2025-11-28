@@ -162,7 +162,7 @@ export function MessageDock({
         scale: 1.05,
         y: -8,
         transition: {
-          type: "spring",
+          type: "spring" as const,
           stiffness: 400,
           damping: 25,
         },
